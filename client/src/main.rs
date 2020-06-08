@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
 
-const LOCAL: &str = "192.168.0.42:6000";
+const LOCAL: &str = "192.168.0.21:6000";
 const MSG_SIZE: usize = 32;
 
 fn sleep() {

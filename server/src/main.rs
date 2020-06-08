@@ -4,7 +4,7 @@ use std::sync::{mpsc, Arc, Mutex };
 use std::thread;
 use std::collections::HashMap;
 
-const LOCAL: &str = "192.168.0.42:6000";
+const LOCAL: &str = "192.168.0.21:6000";
 const MSG_SIZE: usize = 32;
 
 fn sleep() {
@@ -68,6 +68,15 @@ fn main() {
                    Err(_) =>
                    {
                        println!("Closing connection with: {}", addr);
+                       if client_names.lock().unwrap().contains_key(&addr)
+                       {
+                           tx.send(format!("{} left the chat", client_names.lock().unwrap().get(&addr).unwrap())).expect("failed to send msg to rx");
+                       }
+                       else
+                       {
+                           tx.send("Unregistered disconnected".to_string()).expect("failed to send msg to rx");
+                       }
+
                        break;
                    }
                 }
