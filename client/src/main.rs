@@ -2,10 +2,13 @@ use std::io::{self, ErrorKind, Read, Write};
 use std::net::TcpStream;
 use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
-use std::time::Duration;
 
-const LOCAL: &str = "127.0.0.1:6000";
+const LOCAL: &str = "192.168.0.42:6000";
 const MSG_SIZE: usize = 32;
+
+fn sleep() {
+    thread::sleep(::std::time::Duration::from_millis(500));
+}
 
 fn main() {
     let mut client = TcpStream::connect(LOCAL).expect("Stream failed to connect");
@@ -22,7 +25,8 @@ fn main() {
             Ok(_) =>
             {
                 let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                println!("message recv {:?}", msg);
+                let msg = String::from_utf8(msg).expect("Invalid utf8 message");
+                println!("{}", msg);
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => 
@@ -39,13 +43,33 @@ fn main() {
                let mut buff = mgs.clone().into_bytes(); 
                 buff.resize(MSG_SIZE, 0);
                 client.write_all(&buff).expect("Writing to socket failed");
-                println!("message sent {:?}", mgs);
+                // println!("message sent {:?}", mgs);
             },
             Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => break
 
         }
+
+        sleep();
     });
+
+    loop
+    {
+        println!("Enter your name:");
+        let mut buff = String::new();
+        io::stdin().read_line(&mut buff).expect("reading from stdin failed");
+        if buff.trim().is_empty()
+        {
+            println!("You cannot register as an empty name");
+        }
+        else
+        {
+            let msg = format!(":reg::{}", buff.trim().to_string());
+            if tx.send(msg).is_ok() {break}
+            println!("\n");
+        }
+    }
+
 
     println!("Write a message: ");
     loop
